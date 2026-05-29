@@ -4,6 +4,7 @@ import CoreData
 struct Menu: View {
     @Environment(\.managedObjectContext) private var viewContext
     @State var searchText: String = ""
+    @State var selectedCategory: String = ""
     
     var body: some View {
         VStack(spacing: 0) {
@@ -57,17 +58,27 @@ struct Menu: View {
                         .clipped()
                 }
                 
-                // Search button
-                Button(action: {
-                    // Action for search
-                }) {
+                HStack {
                     Image(systemName: "magnifyingglass")
-                        .font(.title2)
+                        .foregroundColor(.gray)
+                    TextField("Search menu", text: $searchText)
+                        .textFieldStyle(.plain)
                         .foregroundColor(.black)
-                        .padding(12)
-                        .background(Color.white.opacity(0.9))
-                        .clipShape(Circle())
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                    
+                    if !searchText.isEmpty {
+                        Button(action: {
+                            searchText = ""
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.gray)
+                        }
+                    }
                 }
+                .padding(10)
+                .background(Color.white)
+                .cornerRadius(8)
                 .padding(.top, 8)
             }
             .padding(20)
@@ -82,10 +93,18 @@ struct Menu: View {
                 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
-                        CategoryButton(title: "Starters")
-                        CategoryButton(title: "Mains")
-                        CategoryButton(title: "Desserts")
-                        CategoryButton(title: "Drinks")
+                        CategoryButton(title: "Starters", isSelected: selectedCategory == "Starters") {
+                            toggleCategory("Starters")
+                        }
+                        CategoryButton(title: "Mains", isSelected: selectedCategory == "Mains") {
+                            toggleCategory("Mains")
+                        }
+                        CategoryButton(title: "Desserts", isSelected: selectedCategory == "Desserts") {
+                            toggleCategory("Desserts")
+                        }
+                        CategoryButton(title: "Drinks", isSelected: selectedCategory == "Drinks") {
+                            toggleCategory("Drinks")
+                        }
                     }
                     .padding(.horizontal)
                 }
@@ -94,11 +113,6 @@ struct Menu: View {
             
             Divider()
                 .padding(.horizontal)
-            
-            TextField("Search menu", text: $searchText)
-                .textFieldStyle(.roundedBorder)
-                .padding(.horizontal)
-                .padding(.bottom, 8)
             
             // List of objects
             FetchedObjects(predicate: buildPredicate(), sortDescriptors: buildSortDescriptors()) { (dishes: [Dish]) in
@@ -152,10 +166,22 @@ struct Menu: View {
     }
     
     func buildPredicate() -> NSPredicate {
-        if searchText.isEmpty {
+        if searchText.isEmpty && selectedCategory.isEmpty {
             return NSPredicate(value: true)
-        } else {
+        } else if !searchText.isEmpty && selectedCategory.isEmpty {
             return NSPredicate(format: "title CONTAINS[cd] %@", searchText)
+        } else if searchText.isEmpty && !selectedCategory.isEmpty {
+            return NSPredicate(format: "category == %@", selectedCategory.lowercased())
+        } else {
+            return NSPredicate(format: "title CONTAINS[cd] %@ AND category == %@", searchText, selectedCategory.lowercased())
+        }
+    }
+    
+    private func toggleCategory(_ category: String) {
+        if selectedCategory == category {
+            selectedCategory = ""
+        } else {
+            selectedCategory = category
         }
     }
     
@@ -190,14 +216,19 @@ struct Menu: View {
 
 struct CategoryButton: View {
     let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
     var body: some View {
-        Text(title)
-            .font(.system(size: 15, weight: .bold))
-            .foregroundColor(Color(red: 0.286, green: 0.369, blue: 0.341))
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .background(Color(red: 0.929, green: 0.937, blue: 0.933)) // #EDEFEE
-            .cornerRadius(16)
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 15, weight: .bold))
+                .foregroundColor(isSelected ? .white : Color(red: 0.286, green: 0.369, blue: 0.341))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(isSelected ? Color(red: 0.286, green: 0.369, blue: 0.341) : Color(red: 0.929, green: 0.937, blue: 0.933))
+                .cornerRadius(16)
+        }
     }
 }
 
