@@ -5,6 +5,7 @@ struct Menu: View {
     @Environment(\.managedObjectContext) private var viewContext
     @State var searchText: String = ""
     @State var selectedCategory: String = ""
+    @State private var avatarImage: UIImage? = nil
     
     var body: some View {
         VStack(spacing: 0) {
@@ -16,18 +17,27 @@ struct Menu: View {
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 32, height: 32)
                     .foregroundColor(Color(red: 0.957, green: 0.808, blue: 0.078)) // #F4CE14
-                
-                Text("LITTLE LEMON")
-                    .font(.system(size: 24, weight: .black, design: .serif))
-                    .foregroundColor(Color(red: 0.286, green: 0.369, blue: 0.341)) // #495E57
-                    .tracking(1.5)
-                Spacer()
-                Image("profile-image-placeholder")
+                Image("little-lemon-logo")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 40, height: 40)
-                    .clipShape(Circle())
-                    .padding(.trailing, 16)
+                    .frame(height: 40)
+                    .padding(.vertical, 12)
+                Spacer()
+                if let avatar = avatarImage {
+                    Image(uiImage: avatar)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 44, height: 44)
+                        .clipShape(Circle())
+                        .padding(.trailing, 16)
+                } else {
+                    Image("profile-image-placeholder")
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(width: 44, height: 44)
+                        .clipShape(Circle())
+                        .padding(.trailing, 16)
+                }
             }
             .padding(.vertical, 8)
             
@@ -156,6 +166,16 @@ struct Menu: View {
         }
         .onAppear {
             getMenuData()
+            loadAvatar()
+        }
+    }
+    
+    private func loadAvatar() {
+        if let path = UserDefaults.standard.string(forKey: kAvatarPath),
+           let image = UIImage(contentsOfFile: path) {
+            avatarImage = image
+        } else {
+            avatarImage = nil
         }
     }
     

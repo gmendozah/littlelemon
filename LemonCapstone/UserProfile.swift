@@ -51,18 +51,11 @@ struct UserProfile: View {
                 Spacer()
                 
                 // Little Lemon Logo
-                HStack(spacing: 8) {
-                    Image(systemName: "lemon.fill")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 24, height: 24)
-                        .foregroundColor(Color(red: 0.957, green: 0.808, blue: 0.078)) // #F4CE14 (Primary Yellow)
-                    
-                    Text("LITTLE LEMON")
-                        .font(.system(size: 18, weight: .black, design: .serif))
-                        .foregroundColor(Color(red: 0.286, green: 0.369, blue: 0.341)) // #495E57
-                        .tracking(1.0)
-                }
+                Image("little-lemon-logo")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(height: 40)
+                    .padding(.vertical, 12)
                 
                 Spacer()
                 

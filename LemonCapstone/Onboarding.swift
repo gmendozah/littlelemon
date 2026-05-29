@@ -20,20 +20,12 @@ struct Onboarding: View {
                 NavigationLink(destination: Home(), isActive: $isLoggedIn) {
                     EmptyView()
                 }
-                // Header (Logo)
-                HStack(spacing: 8) {
-                    Image(systemName: "lemon.fill")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 32, height: 32)
-                        .foregroundColor(Color(red: 0.957, green: 0.808, blue: 0.078)) // #F4CE14
-                    
-                    Text("LITTLE LEMON")
-                        .font(.system(size: 24, weight: .black, design: .serif))
-                        .foregroundColor(Color(red: 0.286, green: 0.369, blue: 0.341)) // #495E57
-                        .tracking(1.5)
-                }
-                .padding(.vertical, 16)
+                
+                Image("little-lemon-logo")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(height: 40)
+                    .padding(.vertical, 12)
                 
                 // Hero Section
                 VStack(alignment: .leading, spacing: 8) {
