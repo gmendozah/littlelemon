@@ -144,7 +144,21 @@ struct Menu: View {
                             
                             Spacer()
                             
-                            if let imageUrlString = dish.image, let url = URL(string: imageUrlString) {
+                            if let title = dish.title, (title.lowercased() == "lemon desert" || title.lowercased() == "lemon dessert") {
+                                Image("lemon-dessert")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 80, height: 80)
+                                    .cornerRadius(8)
+                                    .clipped()
+                            } else if let title = dish.title, title.lowercased() == "grilled fish" {
+                                Image("grilled-fish")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 80, height: 80)
+                                    .cornerRadius(8)
+                                    .clipped()
+                            } else if let imageUrlString = dish.image, let url = URL(string: imageUrlString) {
                                 CachedAsyncImage(url: url) { image in
                                     image
                                         .resizable()
