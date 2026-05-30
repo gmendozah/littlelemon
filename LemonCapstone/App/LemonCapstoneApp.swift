@@ -1,10 +1,3 @@
-//
-//  LemonCapstoneApp.swift
-//  LemonCapstone
-//
-//  Created by Geovani Mendoza on 29/5/26.
-//
-
 import SwiftUI
 import CoreData
 
@@ -14,7 +7,7 @@ struct LemonCapstoneApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Onboarding()
+            OnboardingView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
         }
     }

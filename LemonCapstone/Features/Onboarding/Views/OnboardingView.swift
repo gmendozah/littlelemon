@@ -1,23 +1,12 @@
-let kFirstName = "first name key"
-let kLastName = "last name key"
-let kEmail = "email key"
-let kIsLoggedIn = "kIsLoggedIn"
-
 import SwiftUI
 
-struct Onboarding: View {
-    @State var firstName: String = ""
-    @State var lastName: String = ""
-    @State var email: String = ""
-    
-    @State private var isLoggedIn = false
-    @State private var showValidationError = false
-    @State private var validationErrorMessage = ""
+struct OnboardingView: View {
+    @StateObject private var viewModel = OnboardingViewModel()
     
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                NavigationLink(destination: Home(), isActive: $isLoggedIn) {
+                NavigationLink(destination: HomeView(), isActive: $viewModel.isLoggedIn) {
                     EmptyView()
                 }
                 
@@ -36,8 +25,8 @@ struct Onboarding: View {
                     HStack(alignment: .top, spacing: 16) {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Chicago")
-                                .font(.system(size: 24, weight: .semibold, design: .serif))
-                                .foregroundColor(.white)
+                               .font(.system(size: 24, weight: .semibold, design: .serif))
+                               .foregroundColor(.white)
                             
                             Text("We are a family owned Mediterranean restaurant, focused on traditional recipes served with a modern twist.")
                                 .font(.system(size: 14))
@@ -69,7 +58,7 @@ struct Onboarding: View {
                             Text("First Name *")
                                 .font(.caption.bold())
                                 .foregroundColor(.gray)
-                            TextField("First Name", text: $firstName)
+                            TextField("First Name", text: $viewModel.firstName)
                                 .textFieldStyle(.roundedBorder)
                                 .textInputAutocapitalization(.words)
                                 .disableAutocorrection(true)
@@ -79,7 +68,7 @@ struct Onboarding: View {
                             Text("Last Name *")
                                 .font(.caption.bold())
                                 .foregroundColor(.gray)
-                            TextField("Last Name", text: $lastName)
+                            TextField("Last Name", text: $viewModel.lastName)
                                 .textFieldStyle(.roundedBorder)
                                 .textInputAutocapitalization(.words)
                                 .disableAutocorrection(true)
@@ -89,15 +78,15 @@ struct Onboarding: View {
                             Text("Email *")
                                 .font(.caption.bold())
                                 .foregroundColor(.gray)
-                            TextField("Email", text: $email)
+                            TextField("Email", text: $viewModel.email)
                                 .textFieldStyle(.roundedBorder)
                                 .keyboardType(.emailAddress)
                                 .textInputAutocapitalization(.never)
                                 .disableAutocorrection(true)
                         }
                         
-                        if showValidationError {
-                            Text(validationErrorMessage)
+                        if viewModel.showValidationError {
+                            Text(viewModel.validationErrorMessage)
                                 .foregroundColor(.red)
                                 .font(.caption)
                                 .bold()
@@ -105,22 +94,7 @@ struct Onboarding: View {
                         
                         // Button
                         Button(action: {
-                            if !firstName.isEmpty && !lastName.isEmpty && !email.isEmpty && isValidEmail(email) {
-                                showValidationError = false
-                                UserDefaults.standard.set(firstName, forKey: kFirstName)
-                                UserDefaults.standard.set(lastName, forKey: kLastName)
-                                UserDefaults.standard.set(email, forKey: kEmail)
-                                UserDefaults.standard.set(true, forKey: "isLoggedIn")
-                                UserDefaults.standard.set(true, forKey: kIsLoggedIn)
-                                isLoggedIn = true
-                            } else {
-                                if firstName.isEmpty || lastName.isEmpty || email.isEmpty {
-                                    validationErrorMessage = "All fields are required."
-                                } else {
-                                    validationErrorMessage = "Please enter a valid email address."
-                                }
-                                showValidationError = true
-                            }
+                            viewModel.register()
                         }) {
                             Text("Register")
                                 .font(.headline)
@@ -136,23 +110,10 @@ struct Onboarding: View {
                 }
                 .background(Color.white)
             }
-            .onAppear {
-                if UserDefaults.standard.bool(forKey: kIsLoggedIn) {
-                    isLoggedIn = true
-                }
-            }
         }
-    }
-    
-    private func isValidEmail(_ email: String) -> Bool {
-        let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
-        let emailPred = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
-        return emailPred.evaluate(with: email)
     }
 }
 
-
-
 #Preview {
-    Onboarding()
+    OnboardingView()
 }

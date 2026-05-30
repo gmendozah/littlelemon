@@ -8,7 +8,7 @@ struct FetchedObjects<T, Content>: View where T : NSManagedObject, Content : Vie
 
   var request: FetchRequest<T>
   var results: FetchedResults<T>{ request.wrappedValue }
-    
+     
   init(
     predicate: NSPredicate = NSPredicate(value: true),
     sortDescriptors: [NSSortDescriptor] = [],

@@ -1,20 +1,20 @@
 import SwiftUI
 import CoreData
 
-struct Home: View {
+struct HomeView: View {
     let persistence = PersistenceController.shared
     @State private var selectedTab = 0
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            Menu()
+            MenuView()
                 .environment(\.managedObjectContext, persistence.container.viewContext)
                 .tabItem {
                     Label("Menu", systemImage: "list.dash")
                 }
                 .tag(0)
             
-            UserProfile(selectedTab: $selectedTab)
+            UserProfileView(selectedTab: $selectedTab)
                 .tabItem {
                     Label("Profile", systemImage: "square.and.pencil")
                 }
@@ -25,5 +25,5 @@ struct Home: View {
 }
 
 #Preview {
-    Home()
+    HomeView()
 }

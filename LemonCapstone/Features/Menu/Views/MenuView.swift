@@ -1,11 +1,9 @@
 import SwiftUI
 import CoreData
 
-struct Menu: View {
+struct MenuView: View {
     @Environment(\.managedObjectContext) private var viewContext
-    @State var searchText: String = ""
-    @State var selectedCategory: String = ""
-    @State private var avatarImage: UIImage? = nil
+    @StateObject private var viewModel = MenuViewModel()
     
     var body: some View {
         VStack(spacing: 0) {
@@ -23,7 +21,7 @@ struct Menu: View {
                     .frame(height: 40)
                     .padding(.vertical, 12)
                 Spacer()
-                AvatarView(image: avatarImage, size: 44)
+                AvatarView(image: viewModel.avatarImage, size: 44)
                     .padding(.trailing, 16)
             }
             .padding(.vertical, 8)
@@ -58,15 +56,15 @@ struct Menu: View {
                 HStack {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.gray)
-                    TextField("Search menu", text: $searchText)
+                    TextField("Search menu", text: $viewModel.searchText)
                         .textFieldStyle(.plain)
                         .foregroundColor(.black)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
                     
-                    if !searchText.isEmpty {
+                    if !viewModel.searchText.isEmpty {
                         Button(action: {
-                            searchText = ""
+                            viewModel.searchText = ""
                         }) {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundColor(.gray)
@@ -90,17 +88,17 @@ struct Menu: View {
                 
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
-                        CategoryButton(title: "Starters", isSelected: selectedCategory == "Starters") {
-                            toggleCategory("Starters")
+                        CategoryButton(title: "Starters", isSelected: viewModel.selectedCategory == "Starters") {
+                            viewModel.toggleCategory("Starters")
                         }
-                        CategoryButton(title: "Mains", isSelected: selectedCategory == "Mains") {
-                            toggleCategory("Mains")
+                        CategoryButton(title: "Mains", isSelected: viewModel.selectedCategory == "Mains") {
+                            viewModel.toggleCategory("Mains")
                         }
-                        CategoryButton(title: "Desserts", isSelected: selectedCategory == "Desserts") {
-                            toggleCategory("Desserts")
+                        CategoryButton(title: "Desserts", isSelected: viewModel.selectedCategory == "Desserts") {
+                            viewModel.toggleCategory("Desserts")
                         }
-                        CategoryButton(title: "Drinks", isSelected: selectedCategory == "Drinks") {
-                            toggleCategory("Drinks")
+                        CategoryButton(title: "Drinks", isSelected: viewModel.selectedCategory == "Drinks") {
+                            viewModel.toggleCategory("Drinks")
                         }
                     }
                     .padding(.horizontal)
@@ -112,7 +110,7 @@ struct Menu: View {
                 .padding(.horizontal)
             
             // List of objects
-            FetchedObjects(predicate: buildPredicate(), sortDescriptors: buildSortDescriptors()) { (dishes: [Dish]) in
+            FetchedObjects(predicate: viewModel.buildPredicate(), sortDescriptors: viewModel.buildSortDescriptors()) { (dishes: [Dish]) in
                 List {
                     ForEach(dishes) { dish in
                         HStack {
@@ -166,155 +164,12 @@ struct Menu: View {
             }
         }
         .onAppear {
-            getMenuData()
-            loadAvatar()
-        }
-    }
-    
-    private func loadAvatar() {
-        if let path = UserDefaults.standard.string(forKey: kAvatarPath),
-           let image = UIImage(contentsOfFile: path) {
-            avatarImage = image
-        } else {
-            avatarImage = nil
-        }
-    }
-    
-    func buildSortDescriptors() -> [NSSortDescriptor] {
-        return [
-            NSSortDescriptor(key: "title", ascending: true, selector: #selector(NSString.localizedStandardCompare))
-        ]
-    }
-    
-    func buildPredicate() -> NSPredicate {
-        if searchText.isEmpty && selectedCategory.isEmpty {
-            return NSPredicate(value: true)
-        } else if !searchText.isEmpty && selectedCategory.isEmpty {
-            return NSPredicate(format: "title CONTAINS[cd] %@", searchText)
-        } else if searchText.isEmpty && !selectedCategory.isEmpty {
-            return NSPredicate(format: "category == %@", selectedCategory.lowercased())
-        } else {
-            return NSPredicate(format: "title CONTAINS[cd] %@ AND category == %@", searchText, selectedCategory.lowercased())
-        }
-    }
-    
-    private func toggleCategory(_ category: String) {
-        if selectedCategory == category {
-            selectedCategory = ""
-        } else {
-            selectedCategory = category
-        }
-    }
-    
-    func getMenuData() {
-        let fetchRequest: NSFetchRequest<Dish> = Dish.fetchRequest()
-        if let count = try? viewContext.count(for: fetchRequest), count > 0 {
-            return
-        }
-        
-        PersistenceController.shared.clear()
-        viewContext.reset()
-        
-        let serverURLString = "https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/menu.json"
-        let url = URL(string: serverURLString)!
-        let request = URLRequest(url: url)
-        
-        let task = URLSession.shared.dataTask(with: request) { data, response, error in
-            if let data = data {
-                let decoder = JSONDecoder()
-                DispatchQueue.main.async {
-                    if let menuList = try? decoder.decode(MenuList.self, from: data) {
-                        for item in menuList.menu {
-                            let dish = Dish(context: viewContext)
-                            dish.title = item.title
-                            dish.image = item.image
-                            dish.price = item.price
-                            dish.dishDescription = item.description
-                            dish.category = item.category
-                        }
-                        try? viewContext.save()
-                    }
-                }
-            }
-        }
-        task.resume()
-    }
-}
-
-class ImageCache {
-    static let shared = ImageCache()
-    private var cache = NSCache<NSURL, UIImage>()
-    
-    func get(for url: URL) -> UIImage? {
-        return cache.object(forKey: url as NSURL)
-    }
-    
-    func set(_ image: UIImage, for url: URL) {
-        cache.setObject(image, forKey: url as NSURL)
-    }
-}
-
-struct CachedAsyncImage<Content: View, Placeholder: View>: View {
-    let url: URL
-    let content: (Image) -> Content
-    let placeholder: () -> Placeholder
-    
-    @State private var image: UIImage? = nil
-    @State private var isLoading = false
-    
-    var body: some View {
-        Group {
-            if let image = image {
-                content(Image(uiImage: image))
-            } else {
-                placeholder()
-                    .onAppear {
-                        loadImage()
-                    }
-            }
-        }
-    }
-    
-    private func loadImage() {
-        if let cachedImage = ImageCache.shared.get(for: url) {
-            self.image = cachedImage
-            return
-        }
-        
-        guard !isLoading else { return }
-        isLoading = true
-        
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            isLoading = false
-            guard let data = data, let downloadedImage = UIImage(data: data) else { return }
-            
-            ImageCache.shared.set(downloadedImage, for: url)
-            
-            DispatchQueue.main.async {
-                self.image = downloadedImage
-            }
-        }.resume()
-    }
-}
-
-struct CategoryButton: View {
-    let title: String
-    let isSelected: Bool
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: 15, weight: .bold))
-                .foregroundColor(isSelected ? .white : Color(red: 0.286, green: 0.369, blue: 0.341))
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(isSelected ? Color(red: 0.286, green: 0.369, blue: 0.341) : Color(red: 0.929, green: 0.937, blue: 0.933))
-                .cornerRadius(16)
+            viewModel.getMenuData(viewContext: viewContext)
+            viewModel.loadAvatar()
         }
     }
 }
 
 #Preview {
-    Menu()
+    MenuView()
 }
