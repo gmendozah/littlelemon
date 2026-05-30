@@ -1,5 +1,9 @@
 # 🍋 Little Lemon - iOS Capstone App
 
+<p align="center">
+  <img src="img/app-icon.png" width="120" alt="Little Lemon App Icon" style="border-radius: 22%;">
+</p>
+
 Welcome to **Little Lemon**, a premium iOS application developed as the final Capstone Project for the **Meta iOS Developer Professional Certificate**. 
 
 This app is built for a Mediterranean restaurant, featuring a dynamic food menu fetched from a remote server, Core Data persistence, custom image caching, real-time input validation, and user profile management.
