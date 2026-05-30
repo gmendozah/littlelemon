@@ -32,6 +32,7 @@ struct UserProfile: View {
     @State private var showImagePicker = false
     @State private var pickerSourceType: UIImagePickerController.SourceType = .photoLibrary
     @State private var showPhotoSourceOptions = false
+    @State private var validationErrorMessage: String? = nil
     
     var body: some View {
         VStack(spacing: 0) {
@@ -60,19 +61,7 @@ struct UserProfile: View {
                 Spacer()
                 
                 // Small Profile Avatar (Header Right)
-                if let headerImg = savedAvatarImage {
-                    Image(uiImage: headerImg)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 44, height: 44)
-                        .clipShape(Circle())
-                } else {
-                    Image("profile-image-placeholder")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 44, height: 44)
-                        .clipShape(Circle())
-                }
+                AvatarView(image: savedAvatarImage, size: 44)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 12)
@@ -95,19 +84,7 @@ struct UserProfile: View {
                             .foregroundColor(.gray)
                         
                         HStack(spacing: 20) {
-                            if let avatarImg = tempAvatarImage {
-                                Image(uiImage: avatarImg)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 80, height: 80)
-                                    .clipShape(Circle())
-                            } else {
-                                Image("profile-image-placeholder")
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 80, height: 80)
-                                    .clipShape(Circle())
-                            }
+                            AvatarView(image: tempAvatarImage, size: 80)
                             
                             Button(action: {
                                 showPhotoSourceOptions = true
@@ -182,6 +159,14 @@ struct UserProfile: View {
                     }
                     .padding(.top, 24)
                     
+                    if let errorMessage = validationErrorMessage {
+                        Text(errorMessage)
+                            .foregroundColor(.red)
+                            .font(.caption.bold())
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.top, 8)
+                    }
+                    
                     // Discard & Save changes buttons
                     HStack(spacing: 20) {
                         Button(action: {
@@ -201,7 +186,20 @@ struct UserProfile: View {
                         }
                         
                         Button(action: {
-                            saveUserDefaults()
+                            if firstName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                validationErrorMessage = "First name is required."
+                            } else if lastName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                validationErrorMessage = "Last name is required."
+                            } else if email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                validationErrorMessage = "Email is required."
+                            } else if !isValidEmail(email) {
+                                validationErrorMessage = "Please enter a valid email address."
+                            } else if !isValidPhoneNumber(phoneNumber) {
+                                validationErrorMessage = "Please enter a valid phone number (7-15 digits)."
+                            } else {
+                                validationErrorMessage = nil
+                                saveUserDefaults()
+                            }
                         }) {
                             Text("Save changes")
                                 .font(.subheadline.bold())
@@ -238,6 +236,12 @@ struct UserProfile: View {
         .sheet(isPresented: $showImagePicker) {
             ImagePicker(image: $tempAvatarImage, sourceType: pickerSourceType)
         }
+        .onChange(of: phoneNumber) { newValue in
+            let filtered = newValue.filter { "0123456789 -()+".contains($0) }
+            if filtered != newValue {
+                phoneNumber = filtered
+            }
+        }
     }
     
     // MARK: - Persistence Logic
@@ -262,6 +266,7 @@ struct UserProfile: View {
             savedAvatarImage = nil
         }
         avatarDeleted = false
+        validationErrorMessage = nil
     }
     
     private func saveUserDefaults() {
@@ -307,6 +312,18 @@ struct UserProfile: View {
     
     private func loadImageLocally(path: String) -> UIImage? {
         return UIImage(contentsOfFile: path)
+    }
+    
+    private func isValidEmail(_ email: String) -> Bool {
+        let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+        let emailPred = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
+        return emailPred.evaluate(with: email)
+    }
+    
+    private func isValidPhoneNumber(_ phone: String) -> Bool {
+        if phone.isEmpty { return true }
+        let digits = phone.filter { "0123456789".contains($0) }
+        return digits.count >= 7 && digits.count <= 15
     }
 }
 

@@ -23,21 +23,8 @@ struct Menu: View {
                     .frame(height: 40)
                     .padding(.vertical, 12)
                 Spacer()
-                if let avatar = avatarImage {
-                    Image(uiImage: avatar)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 44, height: 44)
-                        .clipShape(Circle())
-                        .padding(.trailing, 16)
-                } else {
-                    Image("profile-image-placeholder")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 44, height: 44)
-                        .clipShape(Circle())
-                        .padding(.trailing, 16)
-                }
+                AvatarView(image: avatarImage, size: 44)
+                    .padding(.trailing, 16)
             }
             .padding(.vertical, 8)
             
