@@ -1,7 +1,7 @@
 # 🍋 Little Lemon - iOS Capstone App
 
 <p align="center">
-  <img src="img/app-icon.png" width="120" alt="Little Lemon App Icon" style="border-radius: 22%;">
+  <img src="img/app-icon.png" width="120" alt="Little Lemon App Icon">
 </p>
 
 Welcome to **Little Lemon**, a premium iOS application developed as the final Capstone Project for the **Meta iOS Developer Professional Certificate**. 
